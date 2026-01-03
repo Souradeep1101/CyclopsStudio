@@ -1,0 +1,25 @@
+# Visual Studio temporary files
+.vs/
+*.user
+*.suo
+*.opensdf
+*.sdf
+*.cache
+*.vsidx
+
+# Build Output folders
+out/
+build/
+bin/
+bin-int/
+x64/
+Debug/
+Release/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# CMake generated files (if you ever build out of source)
+cmake-build-debug/
+CMakeSettings.json

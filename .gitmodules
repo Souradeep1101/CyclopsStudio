@@ -4,3 +4,9 @@
 [submodule "Engine/vendor/imgui"]
 	path = Engine/vendor/imgui
 	url = https://github.com/ocornut/imgui.git
+[submodule "Engine/vendor/glm"]
+	path = Engine/vendor/glm
+	url = https://github.com/g-truc/glm.git
+[submodule "Engine/vendor/googletest"]
+	path = Engine/vendor/googletest
+	url = https://github.com/google/googletest.git

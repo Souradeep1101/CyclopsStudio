@@ -1,51 +1,71 @@
 project(Engine)
 
-# --- 1. VENDOR: GLFW ---
-# This builds GLFW from source alongside your engine.
-# GLFW_BUILD_DOCS=OFF prevents it from wasting time building documentation.
+# --- 1. DEPENDENCIES ---
+# We manage all 3rd party libs here so the App doesn't have to care about them.
+
+# GLFW
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 add_subdirectory(vendor/glfw)
 
-# --- 2. VENDOR: ImGui ---
-# ImGui is just a few .cpp files, so we add them manually to our list.
-# We also need the "backends" for GLFW and OpenGL3.
+# GLM
+add_subdirectory(vendor/glm)
+
+# ImGui (Manual Source Build)
 set(IMGUI_DIR "${CMAKE_CURRENT_SOURCE_DIR}/vendor/imgui")
-file(GLOB IMGUI_SOURCES 
-    "${IMGUI_DIR}/*.cpp"
+
+# CRITICAL FIX: We split this into two parts.
+# 1. Core ImGui Files: Use GLOB (not RECURSE) to only get .cpp files in the root folder.
+#    Recursion caused the build to pick up examples/ and backends/ for libs we don't have.
+file(GLOB IMGUI_CORE_SOURCES CONFIGURE_DEPENDS "${IMGUI_DIR}/*.cpp")
+
+# 2. Specific Backends: We manually select only GLFW and OpenGL3.
+set(IMGUI_BACKEND_SOURCES
     "${IMGUI_DIR}/backends/imgui_impl_glfw.cpp"
     "${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp"
 )
 
-# --- 3. VENDOR: GLAD ---
+# Combine them
+set(IMGUI_SOURCES ${IMGUI_CORE_SOURCES} ${IMGUI_BACKEND_SOURCES})
+
+# GLAD
 set(GLAD_DIR "${CMAKE_CURRENT_SOURCE_DIR}/vendor/glad")
 set(GLAD_SOURCES "${GLAD_DIR}/src/glad.c")
 
-# --- 4. ENGINE SOURCES ---
-file(GLOB_RECURSE ENGINE_SOURCES "src/*.cpp" "src/*.c")
-file(GLOB_RECURSE ENGINE_HEADERS "src/*.h")
+# --- 2. ENGINE SOURCES ---
+# CONFIGURE_DEPENDS fixes the "Link Error" issue when adding new files
+file(GLOB_RECURSE ENGINE_SOURCES CONFIGURE_DEPENDS "src/*.cpp" "src/*.c")
+file(GLOB_RECURSE ENGINE_HEADERS CONFIGURE_DEPENDS "src/*.h")
 
-# Combine all sources
-set(ALL_SOURCES ${ENGINE_SOURCES} ${IMGUI_SOURCES} ${GLAD_SOURCES})
-set(ALL_HEADERS ${ENGINE_HEADERS})
+# --- 3. DEFINE LIBRARY ---
+# We use STATIC so it compiles into a .lib file
+add_library(Engine STATIC 
+    ${ENGINE_SOURCES} 
+    ${ENGINE_HEADERS} 
+    ${IMGUI_SOURCES} 
+    ${GLAD_SOURCES}
+)
 
-# --- 5. BUILD LIBRARY ---
-add_library(Engine STATIC ${ALL_SOURCES} ${ALL_HEADERS})
-
-# --- 6. INCLUDE DIRECTORIES ---
+# --- 4. INCLUDE DIRECTORIES ---
+# 'PUBLIC' means: "I use these headers, AND anyone who links me needs them too."
 target_include_directories(Engine PUBLIC 
-    ${CMAKE_CURRENT_SOURCE_DIR}/src
-    ${CMAKE_CURRENT_SOURCE_DIR}/vendor/glfw/include
+    src
+    vendor/glfw/include
     ${IMGUI_DIR}
     ${IMGUI_DIR}/backends
     ${GLAD_DIR}/include
+    # Note: GLM handles its own includes via target_link_libraries
 )
 
-# --- 7. LINKING ---
-# We link the GLFW library that we just built (it's named 'glfw' by default).
-target_link_libraries(Engine PUBLIC glfw)
+# --- 5. LINKING ---
+# We link libraries that the Engine needs to function.
+target_link_libraries(Engine PUBLIC 
+    glfw        # Windowing
+    glm::glm    # Math
+)
 
 if(WIN32)
+    # Windows system libraries required by GLFW/OpenGL
     target_link_libraries(Engine PUBLIC opengl32)
 endif()
