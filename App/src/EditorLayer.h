@@ -1,80 +1,61 @@
 #pragma once
 
-#include "Canvas.h"
-#include "ImGui.h"
-#include "BrushEngine.h"
-#include "Layer.h"
+#include "Cyclops/Scene/Canvas.h"
+#include "Cyclops/Tools/BrushEngine.h"
+#include "Cyclops/Core/Layer.h"
 
+// Panels
+#include "Panels/LayerPanel.h"
+#include "Panels/TimelinePanel.h"
+#include "Panels/ViewportPanel.h"
+
+#include <imgui.h>
 #include <memory>
-#include <cstdint>
+#include <vector>
+#include <string>
 
 namespace Cyclops
 {
-	/**
-	 * @class EditorLayer
-	 * @brief The primary Application Layer.
-	 * * @details This layer contains the specific logic for the Cyclops Studio Editor.
-	 * It manages the Layout, the Viewport, the Canvas Document, and User Inputs.
-	 * It inherits from Layer, so it is updated automatically by the Engine.
-	 */
-	class EditorLayer : public Layer
-	{
-	private:
-		// --- Core Systems (Owned) ---
-		std::unique_ptr<Canvas> m_Canvas;
-		std::unique_ptr<BrushEngine> m_BrushEngine;
+    class EditorLayer : public Layer
+    {
+    public:
+        EditorLayer();
+        ~EditorLayer();
 
-		// --- Editor State ---
-		float m_ZoomLevel = 1.0f;
-		ImVec2 m_PanOffset = { 0.0f, 0.0f };
+        virtual void OnAttach() override;
+        virtual void OnDetach() override;
+        virtual void OnImGuiRender() override;
+        virtual void OnUpdate(float ts) override;
+        virtual void OnEvent(Event& event) override;
 
-		// --- Document (Canvas) Settings ---
-		uint32_t m_CanvasWidth = 800;
-		uint32_t m_CanvasHeight = 600;
+    private:
+        // Internal Helpers
+        void DrawPanels();
+        void ImportGengaSequence(const std::string& path);
 
-		// --- Input State ---
-		ImVec2 m_LastMousePos = { 0.0f, 0.0f };
-		bool m_isDrawing = false;
+        // [FIX] Add this missing declaration!
+        void ResetProject();
 
-		// Internal UI Helpers
-		void DrawViewport();
-		void DrawTools();
+    private:
+        // Core Systems
+        std::unique_ptr<Canvas> m_Canvas;
+        std::unique_ptr<BrushEngine> m_BrushEngine;
+        std::vector<std::shared_ptr<Tool>> m_Tools;
+        Tool* m_ActiveTool = nullptr;
 
-	public:
-		EditorLayer();
-		~EditorLayer();
+        // Document Settings
+        uint32_t m_CanvasWidth = 800;
+        uint32_t m_CanvasHeight = 600;
 
-		/*void Init();
-		void OnImGuiRender();
-		void OnUpdate(float ts);*/
+        // Playback State
+        bool m_IsPlaying = false;
+        float m_TimeAccumulator = 0.0f;
+        int m_FrameRate = 12;
+        int m_MaxFrames = 24;
 
-		/**
-		 * @brief Called when the layer is added to the Engine.
-		 * @details Initializes the Canvas and BrushEngine.
-		 */
-		virtual void OnAttach() override; // <-- New Name
-
-		/**
-		 * @brief Called when the layer is removed.
-		 * @details Resources (unique_ptrs) are freed automatically here.
-		 */
-		virtual void OnDetach() override;
-		
-		/**
-		 * @brief The main UI render loop.
-		 * @details Draws the Dockspace, Viewport, and Toolbar windows.
-		 */
-		virtual void OnImGuiRender() override;
-		
-		/**
-		 * @brief The logic update loop.
-		 */
-		virtual void OnUpdate(float ts) override;
-		
-		/**
-		 * @brief Handles global events (Keyboard shortcuts, etc.).
-		 * @note Mouse clicks inside the viewport are handled in OnImGuiRender to respect UI layering.
-		 */
-		virtual void OnEvent(Event& event) override;
-	};
+        // UI Panels
+        LayerPanel m_LayerPanel;
+        TimelinePanel m_TimelinePanel;
+        ViewportPanel m_ViewportPanel;
+    };
 }

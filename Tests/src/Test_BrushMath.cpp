@@ -1,5 +1,6 @@
+#include "Cyclops/Tools/BrushEngine.h"
+
 #include <gtest/gtest.h>
-#include "BrushEngine.h"
 #include <glm/glm.hpp>
 
 // Test Case 1: No Movement
@@ -16,7 +17,7 @@ TEST(BrushMath, NoMovementReturnsZeroPoints) {
 }
 
 // Test Case 2: Linear Movement
-// If spacing is 1.0 (10% of 10.0 size) and we move 10.0 units, we expect 10 points.
+// If spacing is 0.1 (10% of 10.0 size) and we move 10.0 units, we expect 10 points.
 TEST(BrushMath, CorrectPointCount) {
     glm::vec2 start = { 0.0f, 0.0f };
     glm::vec2 end = { 10.0f, 0.0f };
@@ -30,12 +31,14 @@ TEST(BrushMath, CorrectPointCount) {
     EXPECT_EQ(points.size(), 10);
 
     // Verify the last point is exactly at the end
-    EXPECT_FLOAT_EQ(points.back().x, 10.0f);
-    EXPECT_FLOAT_EQ(points.back().y, 0.0f);
+    if (!points.empty()) {
+        EXPECT_FLOAT_EQ(points.back().x, 10.0f);
+        EXPECT_FLOAT_EQ(points.back().y, 0.0f);
+    }
 }
 
 // Test Case 3: Large Spacing
-// If spacing is 2.0 (200%), we expect fewer dots (gaps).
+// If spacing is 0.5 (50%), we expect fewer dots (gaps).
 TEST(BrushMath, LargeSpacing) {
     glm::vec2 start = { 0.0f, 0.0f };
     glm::vec2 end = { 10.0f, 0.0f };
@@ -45,6 +48,6 @@ TEST(BrushMath, LargeSpacing) {
 
     auto points = Cyclops::BrushEngine::CalculateInterpolation(start, end, spacing, size);
 
-    // Moving 10 units with 5 unit steps = 2 points
+    // Moving 10 units with 5 unit steps = 2 points (at 5.0 and 10.0)
     EXPECT_EQ(points.size(), 2);
 }

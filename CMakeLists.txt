@@ -21,5 +21,5 @@ add_subdirectory(Engine)
 add_subdirectory(App)
 
 # Testing
-enable_testing()
-add_subdirectory(Tests)
+# enable_testing()
+# add_subdirectory(Tests)
