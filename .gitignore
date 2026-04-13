@@ -6,6 +6,7 @@
 *.sdf
 *.cache
 *.vsidx
+.vscode/
 
 # Build Output folders
 out/
@@ -23,3 +24,4 @@ Thumbs.db
 # CMake generated files (if you ever build out of source)
 cmake-build-debug/
 CMakeSettings.json
+compile_commands.json
